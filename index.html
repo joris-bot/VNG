@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Woningmarkt Assistent</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue-dark: #0C3D6B;
+      --blue-mid:  #185FA5;
+      --blue-light:#E6F1FB;
+      --surface:   #F7F8FA;
+      --border:    rgba(0,0,0,0.1);
+      --text:      #1A1A2E;
+      --muted:     #6B7280;
+      --white:     #ffffff;
+      --radius:    14px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    /* ── SETUP SCREEN ── */
+    #setup-screen {
+      width: 100%;
+      max-width: 480px;
+      background: var(--white);
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      padding: 40px 36px;
+      text-align: center;
+    }
+    #setup-screen .logo {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: var(--blue-mid); margin: 0 auto 20px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #setup-screen .logo svg { width: 26px; height: 26px; fill: white; }
+    #setup-screen h1 { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--text); margin-bottom: 8px; }
+    #setup-screen p { font-size: 15px; color: var(--muted); line-height: 1.6; margin-bottom: 28px; }
+    #setup-screen label { display: block; text-align: left; font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
+    #setup-screen input, #setup-screen textarea {
+      width: 100%; padding: 11px 14px; border: 1px solid var(--border);
+      border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px;
+      color: var(--text); background: var(--surface); margin-bottom: 16px;
+      transition: border-color .2s;
+    }
+    #setup-screen input:focus, #setup-screen textarea:focus { outline: none; border-color: var(--blue-mid); }
+    #setup-screen textarea { resize: none; height: 110px; }
+    #start-btn {
+      width: 100%; padding: 13px; border: none; border-radius: 10px;
+      background: var(--blue-mid); color: white; font-size: 15px;
+      font-weight: 600; cursor: pointer; transition: background .2s;
+    }
+    #start-btn:hover { background: var(--blue-dark); }
+    .key-hint { font-size: 12px; color: var(--muted); margin-top: 14px; line-height: 1.5; }
+    .key-hint a { color: var(--blue-mid); text-decoration: none; }
+
+    /* ── CHAT SCREEN ── */
+    #chat-screen {
+      display: none;
+      width: 100%; max-width: 680px;
+      height: 680px;
+      background: var(--white);
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.07);
+    }
+
+    /* header */
+    #chat-header {
+      padding: 16px 20px;
+      background: var(--blue-dark);
+      display: flex; align-items: center; gap: 12px;
+    }
+    #chat-header .h-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: rgba(255,255,255,0.15);
+      display: flex; align-items: center; justify-content: center;
+    }
+    #chat-header .h-icon svg { width: 18px; height: 18px; fill: white; }
+    #chat-header .h-info { flex: 1; }
+    #chat-header .h-title { font-size: 15px; font-weight: 600; color: white; }
+    #chat-header .h-sub { font-size: 12px; color: rgba(255,255,255,0.6); }
+    #reset-btn {
+      font-size: 12px; color: rgba(255,255,255,0.6); background: none;
+      border: 1px solid rgba(255,255,255,0.2); border-radius: 8px;
+      padding: 5px 11px; cursor: pointer;
+    }
+    #reset-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+
+    /* messages */
+    #messages {
+      flex: 1; overflow-y: auto; padding: 20px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    #messages::-webkit-scrollbar { width: 4px; }
+    #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .msg { display: flex; gap: 10px; align-items: flex-end; }
+    .msg.user { flex-direction: row-reverse; }
+
+    .avatar {
+      width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 600;
+    }
+    .bot-av { background: var(--blue-light); color: var(--blue-mid); }
+    .user-av { background: var(--blue-mid); color: white; }
+
+    .bubble {
+      max-width: 75%; font-size: 14px; line-height: 1.65;
+      padding: 11px 15px; border-radius: 16px;
+    }
+    .msg.bot .bubble {
+      background: var(--surface); color: var(--text);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+    .msg.user .bubble {
+      background: var(--blue-mid); color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    /* typing */
+    .typing-dots { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: bop 1.1s infinite ease-in-out; }
+    .dot:nth-child(2) { animation-delay: .18s; }
+    .dot:nth-child(3) { animation-delay: .36s; }
+    @keyframes bop { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-7px)} }
+
+    /* chips */
+    #chips { padding: 0 20px 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      font-size: 13px; padding: 6px 13px;
+      border: 1px solid var(--border); border-radius: 20px;
+      background: var(--white); color: var(--muted);
+      cursor: pointer; transition: all .15s;
+    }
+    .chip:hover { border-color: var(--blue-mid); color: var(--blue-mid); background: var(--blue-light); }
+
+    /* input */
+    #input-area {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex; gap: 10px; align-items: flex-end;
+    }
+    #msg-input {
+      flex: 1; font-size: 14px; padding: 10px 14px;
+      border: 1px solid var(--border); border-radius: 10px;
+      background: var(--surface); color: var(--text);
+      resize: none; height: 42px; max-height: 120px;
+      font-family: 'DM Sans', sans-serif; transition: border-color .2s;
+      overflow-y: auto;
+    }
+    #msg-input:focus { outline: none; border-color: var(--blue-mid); }
+    #msg-input::placeholder { color: var(--muted); }
+
+    #send {
+      width: 42px; height: 42px; flex-shrink: 0; border: none;
+      border-radius: 10px; background: var(--blue-mid); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .2s;
+    }
+    #send:hover { background: var(--blue-dark); }
+    #send:disabled { background: var(--border); cursor: default; }
+    #send svg { width: 17px; height: 17px; fill: white; }
+    #send:disabled svg { fill: var(--muted); }
+  </style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen">
+  <div class="logo">
+    <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+  </div>
+  <h1>Woningmarkt Assistent</h1>
+  <p>Een AI-agent die vragen beantwoordt vanuit gemeentelijk perspectief over de woningbouwopgave.</p>
+
+
+
+  <label for="local-expertise">Jullie specifieke expertise & standpunten <span style="font-weight:400;color:#9CA3AF">(optioneel)</span></label>
+  <textarea id="local-expertise" placeholder="Bijv: Onze gemeente werkt met een 40-40-20 verdeling (40% sociaal, 40% middelduur, 20% vrij). Ons bouwdoel is 2.000 woningen per jaar. Wij focussen op verdichting van bestaand stedelijk gebied..."></textarea>
+
+  <button id="start-btn" onclick="startChat()">Assistent starten</button>
+  <p class="key-hint">Je API-sleutel wordt alleen lokaal gebruikt en nooit opgeslagen.<br>
+  Sleutel aanmaken via <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></p>
+</div>
+
+<!-- CHAT SCREEN -->
+<div id="chat-screen">
+  <div id="chat-header">
+    <div class="h-icon">
+      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    </div>
+    <div class="h-info">
+      <div class="h-title">Woningmarkt Assistent</div>
+      <div class="h-sub">Gemeente &amp; overheidsexpertise</div>
+    </div>
+    <button id="reset-btn" onclick="resetChat()">Opnieuw instellen</button>
+  </div>
+
+  <div id="messages"></div>
+
+  <div id="chips">
+    <span class="chip" onclick="useChip(this)">Wat zijn de actuele bouwdoelstellingen?</span>
+    <span class="chip" onclick="useChip(this)">Hoe werkt de 40-40-20 verdeling?</span>
+    <span class="chip" onclick="useChip(this)">Welke instrumenten heeft de gemeente?</span>
+    <span class="chip" onclick="useChip(this)">Hoe verloopt een PPS-traject?</span>
+  </div>
+
+  <div id="input-area">
+    <textarea id="msg-input" placeholder="Stel uw vraag..." rows="1"></textarea>
+    <button id="send" onclick="send()">
+      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+  let API_KEY = '';
+  let EXPERTISE = '';
+  let history = [];
+
+  const SYSTEM = `Je bent een deskundige assistent die spreekt namens een Nederlandse gemeente over de woningmarkt en woningbouwopgave. Je helpt beleidsmakers, politici en projectontwikkelaars met concrete, praktische informatie.
+
+Jouw expertise omvat:
+- Gemeentelijk grond- en woningbouwbeleid
+- Ruimtelijke ordening en bestemmingsplannen / omgevingsplannen
+- Sociale huisvesting en corporatiebeleid (Woningwet)
+- Middeldure huurwoningen en betaalbaarheid
+- Verdichting, transformatie en inbreiding van bestaand stedelijk gebied
+- Publiek-private samenwerking (PPS) bij gebiedsontwikkeling
+- Relevante wet- en regelgeving (Wro, Omgevingswet, Woningwet)
+- Rijksprogramma's: Woningbouwimpuls, Flex Wonen, Nationale Woon- en Bouwagenda
+- Grondexploitatie en kostenverhaal
+
+Spreek altijd in het Nederlands. Geef concrete, goed onderbouwde antwoorden vanuit gemeentelijk perspectief. Wees professioneel en to-the-point. Als lokale expertise beschikbaar is, gebruik die als vertrekpunt.`;
+
+  function startChat() {
+    EXPERTISE = document.getElementById('local-expertise').value.trim();
+    document.getElementById('setup-screen').style.display = 'none';
+    document.getElementById('chat-screen').style.display = 'flex';
+    addMsg('bot', 'Goedag! Ik ben de woningmarktassistent. Ik help beleidsmakers en projectontwikkelaars met vragen over de woningbouwopgave, regelgeving, grondbeleid en samenwerkingsmogelijkheden. Wat kan ik voor u betekenen?');
+  }
+
+  function resetChat() {
+    history = [];
+    document.getElementById('messages').innerHTML = '';
+    document.getElementById('chat-screen').style.display = 'none';
+    document.getElementById('setup-screen').style.display = 'block';
+  }
+
+  function addMsg(role, text) {
+    const msgs = document.getElementById('messages');
+    const d = document.createElement('div');
+    d.className = 'msg ' + role;
+    const av = role === 'bot'
+      ? `<div class="avatar bot-av">G</div>`
+      : `<div class="avatar user-av">U</div>`;
+    d.innerHTML = av + `<div class="bubble">${text.replace(/\n/g,'<br>')}</div>`;
+    msgs.appendChild(d);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function showTyping() {
+    const msgs = document.getElementById('messages');
+    const d = document.createElement('div');
+    d.className = 'msg bot'; d.id = 'typing';
+    d.innerHTML = `<div class="avatar bot-av">G</div><div class="bubble"><div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
+    msgs.appendChild(d);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function removeTyping() {
+    const el = document.getElementById('typing');
+    if (el) el.remove();
+  }
+
+  function useChip(el) {
+    document.getElementById('msg-input').value = el.textContent;
+    document.getElementById('chips').style.display = 'none';
+    send();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('msg-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+    });
+  });
+
+  async function send() {
+    const input = document.getElementById('msg-input');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    document.getElementById('send').disabled = true;
+    addMsg('user', text);
+    history.push({ role: 'user', content: text });
+    showTyping();
+
+    let systemPrompt = SYSTEM;
+    if (EXPERTISE) systemPrompt += `\n\nSpecifieke lokale expertise en standpunten:\n${EXPERTISE}`;
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ system: systemPrompt, messages: history })
+      });
+      const data = await res.json();
+      const reply = data.content?.map(b => b.text || '').join('') || 'Er is een fout opgetreden.';
+      removeTyping();
+      addMsg('bot', reply);
+      history.push({ role: 'assistant', content: reply });
+    } catch(e) {
+      removeTyping();
+      addMsg('bot', 'Er is een technische fout opgetreden. Controleer uw API-sleutel en internetverbinding.');
+    }
+
+    document.getElementById('send').disabled = false;
+    input.focus();
+  }
+</script>
+</body>
+</html>
