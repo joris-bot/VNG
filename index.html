@@ -674,8 +674,27 @@ Spreek altijd in het Nederlands. Geef concrete, goed onderbouwde antwoorden vanu
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ system: getSystemPrompt(), messages: history })
       });
+
+      if (!res.ok) {
+        throw new Error('HTTP ' + res.status);
+      }
+
       const data = await res.json();
-      const reply = data.content?.map(b => b.text || '').join('') || 'Er is een fout opgetreden.';
+
+      // Extract text from response
+      let reply = '';
+      if (data.content && Array.isArray(data.content)) {
+        reply = data.content.map(b => b.text || '').join('');
+      }
+      if (!reply && data.error) {
+        reply = '⚠️ API fout: ' + (data.error.message || JSON.stringify(data.error));
+      }
+      if (!reply && data.type === 'error') {
+        reply = '⚠️ ' + JSON.stringify(data);
+      }
+      if (!reply) {
+        reply = '⚠️ Leeg antwoord van API. Raw: ' + JSON.stringify(data).slice(0, 200);
+      }
 
       document.getElementById('typing')?.remove();
       addMsg('bot', reply);
@@ -683,7 +702,7 @@ Spreek altijd in het Nederlands. Geef concrete, goed onderbouwde antwoorden vanu
 
     } catch(e) {
       document.getElementById('typing')?.remove();
-      addMsg('bot', 'Er is een technische fout opgetreden. Controleer de verbinding.');
+      addMsg('bot', '⚠️ Netwerkfout: ' + e.message);
     }
 
     document.getElementById('send').disabled = false;
