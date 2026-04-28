@@ -669,7 +669,7 @@ Spreek altijd in het Nederlands. Geef concrete, goed onderbouwde antwoorden vanu
     msgs.scrollTop = msgs.scrollHeight;
 
     try {
-      const res = await fetch('/api/chat', {
+      const res = await fetch('/.netlify/functions/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ system: getSystemPrompt(), messages: history })
