@@ -24,19 +24,20 @@ export default async (req) => {
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: 1000,
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 2048,
+      stream: true,
       system: body.system,
       messages: body.messages,
     }),
   });
 
-  const data = await response.json();
-
-  return new Response(JSON.stringify(data), {
+  // Stream the SSE response directly to the client
+  return new Response(response.body, {
     status: response.status,
     headers: {
-      "Content-Type": "application/json",
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
       "Access-Control-Allow-Origin": "*",
     },
   });
