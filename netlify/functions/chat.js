@@ -26,18 +26,17 @@ export default async (req) => {
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
       max_tokens: 2048,
-      stream: true,
       system: body.system,
       messages: body.messages,
     }),
   });
 
-  // Stream the SSE response directly to the client
-  return new Response(response.body, {
+  const data = await response.json();
+
+  return new Response(JSON.stringify(data), {
     status: response.status,
     headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
+      "Content-Type": "application/json",
       "Access-Control-Allow-Origin": "*",
     },
   });

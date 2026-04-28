@@ -660,16 +660,13 @@ Spreek altijd in het Nederlands. Geef concrete, goed onderbouwde antwoorden vanu
     addMsg('user', text);
     history.push({ role: 'user', content: text });
 
-    // Create streaming bot bubble
     const msgs = document.getElementById('messages');
-    const d = document.createElement('div');
-    d.className = 'msg bot';
-    d.innerHTML = `<div class="avatar bot-av">VNG</div><div class="bubble"><span id="stream-content"></span><span class="cursor"></span></div>`;
-    msgs.appendChild(d);
+    const typingEl = document.createElement('div');
+    typingEl.className = 'msg bot';
+    typingEl.id = 'typing';
+    typingEl.innerHTML = `<div class="avatar bot-av">VNG</div><div class="bubble"><div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
+    msgs.appendChild(typingEl);
     msgs.scrollTop = msgs.scrollHeight;
-
-    const streamContent = document.getElementById('stream-content');
-    let fullText = '';
 
     try {
       const res = await fetch('/api/chat', {
@@ -677,43 +674,16 @@ Spreek altijd in het Nederlands. Geef concrete, goed onderbouwde antwoorden vanu
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ system: getSystemPrompt(), messages: history })
       });
+      const data = await res.json();
+      const reply = data.content?.map(b => b.text || '').join('') || 'Er is een fout opgetreden.';
 
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop();
-
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          const data = line.slice(6).trim();
-          if (data === '[DONE]') continue;
-          try {
-            const evt = JSON.parse(data);
-            if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
-              fullText += evt.delta.text;
-              streamContent.innerHTML = escapeHtml(fullText).replace(/\n/g,'<br>');
-              msgs.scrollTop = msgs.scrollHeight;
-            }
-          } catch(_) {}
-        }
-      }
-
-      // Remove cursor
-      const cursor = d.querySelector('.cursor');
-      if (cursor) cursor.remove();
-
-      history.push({ role: 'assistant', content: fullText });
+      document.getElementById('typing')?.remove();
+      addMsg('bot', reply);
+      history.push({ role: 'assistant', content: reply });
 
     } catch(e) {
-      const cursor = d.querySelector('.cursor');
-      if (cursor) cursor.remove();
-      streamContent.innerHTML = '<em style="color:var(--muted)">Er is een technische fout opgetreden.</em>';
+      document.getElementById('typing')?.remove();
+      addMsg('bot', 'Er is een technische fout opgetreden. Controleer de verbinding.');
     }
 
     document.getElementById('send').disabled = false;
