@@ -1,3 +1,13 @@
+const SYSTEM_SUFFIX = `
+
+Sluit elk antwoord altijd af met een sectie "📚 Bronnen:" waarin je de wet- en regelgeving, beleidsprogramma's of publicaties noemt waarop je antwoord is gebaseerd. Gebruik dit formaat:
+
+📚 Bronnen:
+• [naam van wet, artikel of programma]
+• [naam van wet, artikel of programma]
+
+Voorbeelden van bronnen die je kunt noemen: Omgevingswet, Woningwet, Bro, Wro, Nationale Woon- en Bouwagenda, Woningbouwimpuls, Rijksprogramma Woningbouw, VNG-ledenbrief, CBS Woononderzoek, PBL Rapport. Wees zo specifiek mogelijk (bijv. "Omgevingswet art. 5.1" of "Woningwet art. 47"). Als je niet zeker bent van een specifieke bron, vermeld dan alleen bronnen waarvan je redelijk zeker bent.`;
+
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") {
     return {
@@ -27,7 +37,7 @@ exports.handler = async (event) => {
     body: JSON.stringify({
       model: "claude-sonnet-4-6",
       max_tokens: 2048,
-      system: body.system,
+      system: body.system + SYSTEM_SUFFIX,
       messages: body.messages,
     }),
   });
